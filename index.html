@@ -1,99 +1,178 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <title>SmartApp</title>
-  <!-- === เพิ่มส่วนนี้ === -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d47a1">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <!-- ==================== -->  
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base target="_top">
   <link rel="shortcut icon" href="https://lh5.googleusercontent.com/d/1bSkk2AYPALpi_b7J_eg6DrkYZ-eP6G-k">
-</head>
 
-<body>
-  <div id="openChromeBanner" style="display:none; position:fixed; top:0; left:0; right:0;
-     background:#0d47a1; color:#fff; padding:12px; text-align:center; z-index:9999;">
-  ⚠️ กรุณาเปิดผ่าน Chrome เพื่อติดตั้งแอปได้
-  <br>
-  <button onclick="openInChrome()" style="margin-top:8px; padding:6px 16px; 
-     background:#fff; color:#0d47a1; border:none; border-radius:4px;">
-    เปิดใน Chrome
-  </button>
-</div>
-
-<script>
-  function isInAppBrowser() {
-    const ua = navigator.userAgent.toLowerCase();
-    return /line|fban|fbav|instagram|micromessenger/.test(ua);
-  }
-
-  function openInChrome() {
-    const url = window.location.href.replace(/^https?:\/\//, '');
-    const isAndroid = /android/.test(navigator.userAgent.toLowerCase());
-    
-    if (isAndroid) {
-      // Android: เด้งเปิด Chrome โดยตรงผ่าน intent
-      window.location.href = 'intent://' + url + 
-        '#Intent;scheme=https;package=com.android.chrome;end';
-    } else {
-      // iOS: ไม่มีทางบังคับได้ 100% ให้บอกวิธี copy ลิงก์แทน
-      alert('กรุณาแตะปุ่ม ⋯ หรือ ⋮ มุมขวาบน แล้วเลือก "เปิดใน Safari/Chrome"');
+  <style>
+    /* ===== Banner แจ้งเตือนให้เปิดผ่าน Chrome (in-app browser) ===== */
+    #openChromeBanner {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #0d47a1;
+      color: #fff;
+      padding: 12px;
+      text-align: center;
+      z-index: 9999;
     }
-  }
 
-  if (isInAppBrowser()) {
-    document.getElementById('openChromeBanner').style.display = 'block';
-  }
-</script>
-  <!-- วางไว้บนสุดของ body -->
-<div id="installBar" style="display:none; position:sticky; top:0; z-index:9999;
-     background:#0d47a1; color:#fff; padding:10px 16px; 
-     display:flex; align-items:center; justify-content:space-between;">
-  <span>📲 ติดตั้งแอปนี้ไว้ในเครื่องของคุณ</span>
-  <button id="installBtn" style="padding:6px 14px; background:#fff; 
-     color:#0d47a1; border:none; border-radius:6px; font-weight:bold;">
-    ติดตั้ง
-  </button>
-</div>
+    /* ===== Banner ติดตั้งแอป ทรงแคปซูล โปร่งแสง ===== */
+    #installBar {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px 10px 18px;
+      border-radius: 999px;
+      background: rgba(13, 71, 161, 0.45);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+      max-width: 92vw;
+      transition: transform 0.4s cubic-bezier(.2,.9,.3,1), opacity 0.4s ease;
+      opacity: 0;
+      pointer-events: none;
+      font-family: -apple-system, "Segoe UI", "Sarabun", sans-serif;
+    }
+    #installBar.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #installBar span {
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    #installBar button {
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.95);
+      color: #0d47a1;
+      border: none;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 13px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
 
-<script>
-  let deferredPrompt;
-  const bar = document.getElementById('installBar');
-  const btn = document.getElementById('installBtn');
+  <!-- ===== Banner แจ้งให้เปิดผ่าน Chrome (กรณีเปิดจาก LINE/Facebook/IG in-app) ===== -->
+  <div id="openChromeBanner">
+    ⚠️ กรุณาเปิดผ่าน Chrome เพื่อติดตั้งแอปได้
+    <br>
+    <button onclick="openInChrome()" style="margin-top:8px; padding:6px 16px;
+       background:#fff; color:#0d47a1; border:none; border-radius:4px;">
+      เปิดใน Chrome
+    </button>
+  </div>
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    bar.style.display = 'flex'; // โชว์แถบเองแทนที่จะรอ Chrome
-  });
+  <!-- ===== Banner ติดตั้งแอป ทรงแคปซูล ===== -->
+  <div id="installBar">
+    <span>📲 ติดตั้งแอปนี้ไว้ในเครื่อง</span>
+    <button id="installBtn">ติดตั้ง</button>
+  </div>
 
-  btn.addEventListener('click', async () => {
-    bar.style.display = 'none';
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-  });
-
-  window.addEventListener('appinstalled', () => {
-    bar.style.display = 'none';
-  });
-</script>
   <iframe style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;"
-src="https://script.google.com/macros/s/AKfycbzJJFVFuvFPyTc80PwIW2_7WXXsFxAS8_Ye2w_yD3nFQXsa2T0XCdluGdtRfgy-OSn6Wg/exec"></iframe>
-  <!-- === เพิ่มก่อนปิด body === -->
+    src="https://script.google.com/macros/s/AKfycbzJJFVFuvFPyTc80PwIW2_7WXXsFxAS8_Ye2w_yD3nFQXsa2T0XCdluGdtRfgy-OSn6Wg/exec"></iframe>
+
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW registered:', reg))
+    /* ===================================================
+       1) ตรวจ in-app browser (LINE/FB/IG) แล้วเสนอเปิด Chrome
+    =================================================== */
+    function isInAppBrowser() {
+      const ua = navigator.userAgent.toLowerCase();
+      return /line|fban|fbav|instagram|micromessenger/.test(ua);
+    }
+    function openInChrome() {
+      const url = window.location.href.replace(/^https?:\/\//, '');
+      const isAndroid = /android/.test(navigator.userAgent.toLowerCase());
+      if (isAndroid) {
+        window.location.href = 'intent://' + url +
+          '#Intent;scheme=https;package=com.android.chrome;end';
+      } else {
+        alert('กรุณาแตะปุ่ม ⋯ หรือ ⋮ มุมขวาบน แล้วเลือก "เปิดใน Safari/Chrome"');
+      }
+    }
+    const inAppBrowser = isInAppBrowser();
+
+    if (inAppBrowser) {
+      /* ===== อยู่ใน LINE/FB/IG: โชว์เฉพาะ banner ให้เปิด Chrome
+              และไม่ต้องยุ่งกับ install-banner logic เลย ===== */
+      document.getElementById('openChromeBanner').style.display = 'block';
+
+    } else {
+      /* ===== อยู่ใน Chrome จริงแล้ว: ทำงานเฉพาะส่วน install banner ===== */
+
+      /* 2) Register Service Worker ให้เร็วที่สุด
+            (ไม่รอ window.load ที่ต้องรอ iframe โหลดเสร็จ) */
+      let swReadyPromise = Promise.resolve();
+      if ('serviceWorker' in navigator) {
+        swReadyPromise = navigator.serviceWorker.register('sw.js')
+          .then(reg => {
+            console.log('SW registered:', reg);
+            return navigator.serviceWorker.ready;
+          })
           .catch(err => console.log('SW registration failed:', err));
+      }
+
+      /* 3) จับ beforeinstallprompt แสดง banner ทรงแคปซูล */
+      let deferredPrompt = null;
+      const bar = document.getElementById('installBar');
+      const btn = document.getElementById('installBtn');
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                            || window.navigator.standalone === true;
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!isStandalone) bar.classList.add('show');
       });
+
+      btn.addEventListener('click', async () => {
+        bar.classList.remove('show');
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      });
+
+      window.addEventListener('appinstalled', () => {
+        bar.classList.remove('show');
+      });
+
+      /* 4) แก้ปัญหา "ต้อง refresh ก่อนถึงจะเห็น banner"
+            ถ้าเปิดครั้งแรกแล้วยังไม่เจอ beforeinstallprompt
+            ภายในเวลาสั้นๆ ให้ reload อัตโนมัติ 1 ครั้ง
+            (กัน loop ด้วย sessionStorage) */
+      if (!isStandalone) {
+        swReadyPromise.then(() => {
+          setTimeout(() => {
+            const alreadyReloaded = sessionStorage.getItem('pwaAutoReloaded');
+            if (!deferredPrompt && !alreadyReloaded) {
+              sessionStorage.setItem('pwaAutoReloaded', '1');
+              window.location.reload();
+            }
+          }, 1200); // รอ 1.2 วิ ให้ Chrome มีเวลาประเมิน
+        });
+      }
     }
   </script>
-  <!-- ========================= -->
-   </body>
+
+  <!-- sw.js ต้องมี fetch handler + skipWaiting/clients.claim ตามที่เคยให้ไว้ -->
+
+</body>
 </html>
