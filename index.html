@@ -105,8 +105,8 @@
     <button id="installBtn">ติดตั้ง</button>
   </div>
 
-  <iframe style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;"
-    src="https://script.google.com/macros/s/AKfycbzJJFVFuvFPyTc80PwIW2_7WXXsFxAS8_Ye2w_yD3nFQXsa2T0XCdluGdtRfgy-OSn6Wg/exec"></iframe>
+  <iframe id="appFrame" style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;"
+    data-src="https://script.google.com/macros/s/AKfycbzJJFVFuvFPyTc80PwIW2_7WXXsFxAS8_Ye2w_yD3nFQXsa2T0XCdluGdtRfgy-OSn6Wg/exec"></iframe>
 
   <script>
     /* ===================================================
@@ -128,10 +128,21 @@
     }
     const inAppBrowser = isInAppBrowser();
 
+    /* โหลด iframe แอปจริง (ทำครั้งเดียว กันเรียกซ้ำ) */
+    let appFrameLoaded = false;
+    function loadAppFrame() {
+      if (appFrameLoaded) return;
+      appFrameLoaded = true;
+      const frame = document.getElementById('appFrame');
+      frame.src = frame.dataset.src;
+    }
+
     if (inAppBrowser) {
       /* ===== อยู่ใน LINE/FB/IG: โชว์เฉพาะ banner ให้เปิด Chrome
               และไม่ต้องยุ่งกับ install-banner logic เลย ===== */
       document.getElementById('openChromeBanner').style.display = 'flex';
+      // เส้นทางนี้ไม่มีการ reload หน้า จึงโหลด iframe ได้ทันที
+      loadAppFrame();
 
     } else {
       /* ===== อยู่ใน Chrome จริงแล้ว: ทำงานเฉพาะส่วน install banner ===== */
@@ -159,6 +170,7 @@
         e.preventDefault();
         deferredPrompt = e;
         if (!isStandalone) bar.classList.add('show');
+        loadAppFrame(); // รู้ผลแล้วว่าไม่ต้อง reload → โหลด iframe ได้ทันที ไม่ต้องรอครบ 1.2 วิ
       });
 
       btn.addEventListener('click', async () => {
@@ -173,19 +185,26 @@
         bar.classList.remove('show');
       });
 
-      /* 4) แก้ปัญหา "ต้อง refresh ก่อนถึงจะเห็น banner"
-            ถ้าเปิดครั้งแรกแล้วยังไม่เจอ beforeinstallprompt
-            ภายในเวลาสั้นๆ ให้ reload อัตโนมัติ 1 ครั้ง
-            (กัน loop ด้วย sessionStorage) */
-      if (!isStandalone) {
+      /* 4) แก้ปัญหา "ต้อง refresh ก่อนถึงจะเห็น banner" เฉพาะ "ครั้งแรกสุด"
+            ที่ Service Worker ยังไม่เคย activate เท่านั้น
+            ครั้งต่อๆ ไป (มี controller อยู่แล้ว) โหลด iframe ทันที ไม่หน่วงเวลา */
+      const hasController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+
+      if (isStandalone || hasController) {
+        // เคยมี SW คุมอยู่แล้ว หรือเปิดจากแอปที่ติดตั้งแล้ว → โหลดทันที ไม่ต้องรอ
+        loadAppFrame();
+      } else {
+        // ครั้งแรกสุดของเบราว์เซอร์นี้ต่อโดเมนนี้ → รอสั้นๆ เพื่อให้ SW ทันประเมิน
         swReadyPromise.then(() => {
           setTimeout(() => {
             const alreadyReloaded = sessionStorage.getItem('pwaAutoReloaded');
             if (!deferredPrompt && !alreadyReloaded) {
               sessionStorage.setItem('pwaAutoReloaded', '1');
-              window.location.reload();
+              window.location.reload(); // จะ reload ทันที ไม่ต้องโหลด iframe ในรอบนี้
+            } else {
+              loadAppFrame(); // ตัดสินใจไม่ reload แล้ว โหลด iframe ได้เต็มที่
             }
-          }, 1200); // รอ 1.2 วิ ให้ Chrome มีเวลาประเมิน
+          }, 1200); // รอ 1.2 วิ ให้ Chrome มีเวลาประเมิน (เกิดแค่ครั้งแรกสุดเท่านั้น)
         });
       }
     }
