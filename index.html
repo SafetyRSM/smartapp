@@ -18,24 +18,26 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 9999;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
       gap: 10px;
-      padding: 14px 20px;
-      border-radius: 28px;
+      padding: 10px 12px 10px 18px;
+      border-radius: 999px;
       background: rgba(13, 71, 161, 0.45);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(255,255,255,0.25);
       color: #fff;
       box-shadow: 0 6px 24px rgba(0,0,0,0.25);
-      max-width: 88vw;
-      text-align: center;
+      max-width: 92vw;
       font-family: -apple-system, "Segoe UI", "Sarabun", sans-serif;
       font-size: 14px;
     }
+    #openChromeBanner span {
+      white-space: nowrap;
+    }
     #openChromeBanner button {
-      padding: 8px 20px;
+      padding: 8px 16px;
       background: rgba(255,255,255,0.95);
       color: #0d47a1;
       border: none;
@@ -43,6 +45,7 @@
       font-weight: bold;
       font-size: 13px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* ===== Banner ติดตั้งแอป ทรงแคปซูล โปร่งแสง ===== */
