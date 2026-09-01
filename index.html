@@ -21,8 +21,8 @@
       flex-direction: row;
       align-items: center;
       gap: 10px;
-      padding: 14px 20px;
-      border-radius: 28px;
+      padding: 8px 8px 8px 16px;
+      border-radius: 999px;
       background: rgba(13, 71, 161, 0.45);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -37,7 +37,7 @@
       white-space: nowrap;
     }
     #openChromeBanner button {
-      padding: 8px 20px;
+      padding: 6px 14px;
       background: rgba(255,255,255,0.95);
       color: #0d47a1;
       border: none;
@@ -45,6 +45,7 @@
       font-weight: bold;
       font-size: 13px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* ===== Banner ติดตั้งแอป ทรงแคปซูล โปร่งแสง ===== */
@@ -97,7 +98,7 @@
 
   <!-- ===== Banner แจ้งให้เปิดผ่าน Chrome (กรณีเปิดจาก LINE/Facebook/IG in-app) ===== -->
   <div id="openChromeBanner">
-    <span>⚠️ กรุณาเปิด Chrome เพื่อติดตั้งแอป</span>
+    <span>กรุณาเปิด Chrome เพื่อติดตั้งแอป</span>
     <button onclick="openInChrome()">เปิด</button>
   </div>
 
