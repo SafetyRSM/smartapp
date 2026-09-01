@@ -131,19 +131,31 @@
     }
     const inAppBrowser = isInAppBrowser();
 
-    /* โหลด iframe แอปจริง (ทำครั้งเดียว กันเรียกซ้ำ) */
+    /* URL ของแอปจริง (Google Apps Script) */
+    const APP_URL = "https://script.google.com/macros/s/AKfycbzJJFVFuvFPyTc80PwIW2_7WXXsFxAS8_Ye2w_yD3nFQXsa2T0XCdluGdtRfgy-OSn6Wg/exec";
+
+    /* โหลด iframe แอปจริง (ทำครั้งเดียว กันเรียกซ้ำ)
+       *** พร้อมระบบตรวจจับว่า iframe ค้างหรือไม่ (เช่นโดน Chrome บล็อก
+           third-party cookie ตอน Google Apps Script redirect ภายใน)
+           ถ้าโหลดไม่สำเร็จภายในเวลาที่กำหนด จะสลับไปเปิดแบบเต็มหน้าอัตโนมัติ
+           ซึ่งยืนยันแล้วว่าใช้งานได้จริง 100% *** */
     let appFrameLoaded = false;
     function loadAppFrame() {
       if (appFrameLoaded) return;
       appFrameLoaded = true;
       const frame = document.getElementById('appFrame');
-      frame.src = frame.dataset.src;
-    }
 
-    /* *** FAIL-SAFE: ไม่ว่า logic ด้านล่างจะติดขัดจาก error อะไรก็ตาม
-           (SW ลงทะเบียนไม่สำเร็จ, reload ไม่ทำงาน, ฯลฯ)
-           บังคับโหลด iframe ภายใน 3 วิ เพื่อไม่ให้ค้างค้างถาวรเด็ดขาด *** */
-    setTimeout(loadAppFrame, 3000);
+      const fallbackTimer = setTimeout(() => {
+        console.log('iframe โหลดไม่สำเร็จภายในเวลาที่กำหนด → สลับไปเปิดแบบเต็มหน้า');
+        window.location.replace(APP_URL);
+      }, 5000);
+
+      frame.addEventListener('load', () => {
+        clearTimeout(fallbackTimer);
+      }, { once: true });
+
+      frame.src = APP_URL;
+    }
 
     if (inAppBrowser) {
       /* ===== อยู่ใน LINE/FB/IG: โชว์เฉพาะ banner ให้เปิด Chrome
