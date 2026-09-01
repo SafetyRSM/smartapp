@@ -14,12 +14,35 @@
     #openChromeBanner {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0;
-      background: #0d47a1;
-      color: #fff;
-      padding: 12px;
-      text-align: center;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border-radius: 28px;
+      background: rgba(13, 71, 161, 0.45);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+      max-width: 88vw;
+      text-align: center;
+      font-family: -apple-system, "Segoe UI", "Sarabun", sans-serif;
+      font-size: 14px;
+    }
+    #openChromeBanner button {
+      padding: 8px 20px;
+      background: rgba(255,255,255,0.95);
+      color: #0d47a1;
+      border: none;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 13px;
+      white-space: nowrap;
     }
 
     /* ===== Banner ติดตั้งแอป ทรงแคปซูล โปร่งแสง ===== */
@@ -72,12 +95,8 @@
 
   <!-- ===== Banner แจ้งให้เปิดผ่าน Chrome (กรณีเปิดจาก LINE/Facebook/IG in-app) ===== -->
   <div id="openChromeBanner">
-    ⚠️ กรุณาเปิดผ่าน Chrome เพื่อติดตั้งแอปได้
-    <br>
-    <button onclick="openInChrome()" style="margin-top:8px; padding:6px 16px;
-       background:#fff; color:#0d47a1; border:none; border-radius:4px;">
-      เปิดใน Chrome
-    </button>
+    <span>⚠️ กรุณาเปิดผ่าน Chrome เพื่อติดตั้งแอปได้</span>
+    <button onclick="openInChrome()">เปิดใน Chrome</button>
   </div>
 
   <!-- ===== Banner ติดตั้งแอป ทรงแคปซูล ===== -->
@@ -112,7 +131,7 @@
     if (inAppBrowser) {
       /* ===== อยู่ใน LINE/FB/IG: โชว์เฉพาะ banner ให้เปิด Chrome
               และไม่ต้องยุ่งกับ install-banner logic เลย ===== */
-      document.getElementById('openChromeBanner').style.display = 'block';
+      document.getElementById('openChromeBanner').style.display = 'flex';
 
     } else {
       /* ===== อยู่ใน Chrome จริงแล้ว: ทำงานเฉพาะส่วน install banner ===== */
